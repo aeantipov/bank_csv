@@ -1,0 +1,14 @@
+name: money
+channels:
+  - conda-forge
+dependencies:
+    - python
+    - numpy
+    - pandas
+    - gspread
+    - oauth2client
+    - flake8
+    - black
+    - pre_commit
+    - pydocstyle
+    - rope
