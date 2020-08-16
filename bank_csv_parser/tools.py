@@ -98,7 +98,7 @@ def check_csv_extra_separators(buffer: List[str], separator: str = ",") -> bool:
     return True
 
 
-def get_header_lines(buffer: List[str]) -> int:
+def get_header_lines(buffer: List[str], separator: str = ",") -> int:
     """Extract the number of header lines by looking if they're convertible to dates
 
     Parameters
@@ -111,6 +111,14 @@ def get_header_lines(buffer: List[str]) -> int:
     int
         Number of header lines
     """
-    return np.sum(
-        [not is_date_convertible(x.rstrip().split(",")[0])[0] for x in buffer]
-    )
+    ln = 0
+    has_date = False
+    for x in buffer:
+        has_date = np.sum(
+            list(map(lambda x: is_date_convertible(x)[0], x.rstrip().split(separator)))
+        )
+        if not has_date:
+            ln += 1
+        else:
+            break
+    return ln
