@@ -29,8 +29,10 @@ class StatementData:
     dframe: pd.dataframe
 
     @classmethod
-    def from_csv(self, fname: str, csv_separator: str) -> StatementData:
-        readlines = np.asarray(open(fname, "r").read().splitlines())
+    def from_csv(
+        self, fname: str, csv_separator: str, filters: List[str]
+    ) -> StatementData:
+        readlines = np.asarray(open(fname, "r").read().splitlines(), dtype=object)
         header_lines = get_header_lines(readlines)
         buffer = readlines[header_lines:]
         check_csv_extra_separators(buffer, csv_separator)
@@ -49,9 +51,18 @@ class StatementData:
         dates = dframe.index[:]
         descriptions = dframe.values[:, desc_index - 1]
 
+        # Filter "Payment" entries
+        filter_inds = np.where(
+            np.logical_not([x.lower() in filters for x in descriptions])
+        )
+        money = money[filter_inds]
+        dates = dates[filter_inds]
+        descriptions = descriptions[filter_inds]
+
         # Some banks have debit negative, some positive
         # Figure it out by looking at the average sign of the money column
         sign = np.mean(np.sign(money))
+        print("Sign = ", sign)
         money *= (-1.0) if sign > 0 else 1.0
         return StatementData(
             dates=dates, money=money, descriptions=descriptions, dframe=dframe
@@ -193,13 +204,16 @@ class BankCSVParser(IPrintable):
             "INTERNET PAYMENT THANK YOU",
             "Payment Received",
         ]
+        self.filters = [x.lower() for x in self.filters]
 
     def parse(self):
         """Loop through a list of files and create a database
         """
         for fname in self.filenames:
             self.print("-->", fname)
-            statement_data = StatementData.from_csv(fname, self.csv_separator)
+            statement_data = StatementData.from_csv(
+                fname, self.csv_separator, self.filters
+            )
             self.data[fname] = statement_data
             self.print(self.data[fname].dframe.head())
             self.print("---------------------------------------------------")
@@ -230,6 +244,8 @@ class BankCSVParser(IPrintable):
                     -round(m, 2)
                 ]
                 self.desc_sorted[date1] = self.desc_sorted.get(date1, []) + [desc]
+            else:
+                raise ValueError("Filter didn't work")
 
     def data_stack(self):
         """Stack dates, values and descriptions to an array
