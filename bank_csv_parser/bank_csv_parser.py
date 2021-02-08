@@ -138,7 +138,9 @@ class StatementData:
             desc_index = desc_cols[0]
 
         # Extract the column number with the money amount
-        float_sample = large_data_sample[:, float_cols].astype(float)
+        float_sample = large_data_sample[:, float_cols]
+        float_sample[np.where(float_sample == "")] = np.nan
+        float_sample = float_sample.astype(float)
         means = np.mean(float_sample, axis=0)
         stds = np.std(float_sample, axis=0)
         rel_variation = stds / np.abs(means)
@@ -203,6 +205,8 @@ class BankCSVParser(IPrintable):
             "ONLINE PAYMENT THANK YOU",
             "INTERNET PAYMENT THANK YOU",
             "Payment Received",
+            "Topped up balance",
+            "MOBILE PAYMENT - THANK YOU",
         ]
         self.filters = [x.lower() for x in self.filters]
 

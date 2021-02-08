@@ -33,7 +33,7 @@ def is_date_convertible(in_str: str) -> Tuple[bool, Optional[datetime.datetime]]
     this_is_date = False
     in_str = in_str.strip('"')
     x = None
-    fmts = ["%m/%d/%Y", "%m/%d/%y"]
+    fmts = ["%m/%d/%Y", "%m/%d/%y", "%d-%m-%Y"]
     for fmt in fmts:
         try:
             x = datetime.datetime.strptime(in_str, fmt)
@@ -63,6 +63,7 @@ def is_float_convertible(in_str: str) -> Tuple[bool, float]:
         r"^[-+]?(?:\b[0-9]+(?:\.[0-9]*)?|\.[0-9]+\b)(?:[eE][-+]?[0-9]+\b)?$"
     )
     is_float = re.match(_float_regexp, in_str)
+    is_float = is_float and len(in_str) > 0
     return (is_float, float(in_str)) if is_float else (False, None)
 
 
@@ -115,7 +116,7 @@ def get_header_lines(buffer: List[str], separator: str = ",") -> int:
     has_date = False
     for x in buffer:
         has_date = np.sum(
-            list(map(lambda x: is_date_convertible(x)[0], x.rstrip().split(separator)))
+            list(map(lambda y: is_date_convertible(y)[0], x.rstrip().split(separator)))
         )
         if not has_date:
             ln += 1
