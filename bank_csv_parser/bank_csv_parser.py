@@ -47,9 +47,23 @@ class StatementData:
             dayfirst=False,
             keep_date_col=True,
         )
+        dframe = pd.read_csv(
+            fname,
+            parse_dates=True,
+            header=header_lines - 1 if header_lines else None,
+            index_col=date_index,
+            dayfirst=False,
+            keep_date_col=True,
+            converters={
+                dframe.columns[money_index - 1]: lambda x: float(x.replace("$", ""))
+            },
+            skip_blank_lines=True,
+        )
+
         money = dframe.values[:, money_index - 1]
         dates = dframe.index[:]
         descriptions = dframe.values[:, desc_index - 1]
+        print(money)
 
         # Filter "Payment" entries
         filter_inds = np.where(
@@ -101,6 +115,7 @@ class StatementData:
         string_cols = []
         print("Sample:", data_sample)
         for i in range(len(data_sample)):
+            data_sample[i] = data_sample[i].replace("$", "").replace('"', "")
             (is_date, x) = is_date_convertible(data_sample[i])
             # check if date
             if is_date:
@@ -138,6 +153,10 @@ class StatementData:
             desc_index = desc_cols[0]
 
         # Extract the column number with the money amount
+        for x in float_cols:
+            large_data_sample[:, x] = np.array(
+                [x.replace("$", "").replace('"', "") for x in large_data_sample[:, x]]
+            )
         float_sample = large_data_sample[:, float_cols]
         float_sample[np.where(float_sample == "")] = np.nan
         float_sample = float_sample.astype(float)

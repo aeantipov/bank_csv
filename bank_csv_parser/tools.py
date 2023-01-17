@@ -118,7 +118,7 @@ def get_header_lines(buffer: List[str], separator: str = ",") -> int:
         has_date = np.sum(
             list(map(lambda y: is_date_convertible(y)[0], x.rstrip().split(separator)))
         )
-        if not has_date:
+        if not has_date and len(x) > 0:
             ln += 1
         else:
             break
